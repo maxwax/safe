@@ -29,28 +29,28 @@ PREPARATION BEFORE USING THIS SCRIPT:
 =====================================
 
 Create an empty file; This example makes a 32M file.
-	dd if=/dev/zero of=my-luks-locker.luks bs=1M count=32
+    dd if=/dev/zero of=my-luks-locker.luks bs=1M count=32
 
 Encrypt the data with luks
-	cryptsetup luksFormat my-luks-locker.luks
+    cryptsetup luksFormat my-luks-locker.luks
 
 Open the encrypted data, mapping it as a block device using device mapper
-	cryptsetup luksOpen my-luks-locker.luks my-open-luks
+    cryptsetup luksOpen my-luks-locker.luks my-open-luks
 
 Format the mapped block device
-	mkfs.ext4 -v -m 0 -j -L my-luks-locker /dev/mapper/my-open-luks
+    mkfs.ext4 -v -m 0 -j -L my-luks-locker /dev/mapper/my-open-luks
 
 Mount the newly created filesystem
-	mkdir /mnt/my-open-luks
-	mount /dev/mapper/my-open-luks /mnt/my-open-luks
+    mkdir /mnt/my-open-luks
+    mount /dev/mapper/my-open-luks /mnt/my-open-luks
 
 Modify this script to add a case statement for each luks encrypted
 file:
 
-	USER="maxwell"
-	SOURCE_FILE="/home/maxwell/Documents/Projects/Notes/notes.luks"
-	UNLOCKED_MAPPING="notes-luks"
-	MOUNT_POINT="/mnt/secure/notes";;
+    USER="maxwell"
+    SOURCE_FILE="/home/maxwell/Documents/Projects/Notes/notes.luks"
+    UNLOCKED_MAPPING="notes-luks"
+    MOUNT_POINT="/mnt/secure/notes";;
 
 This part will be replaced by an external config file in the future.
 
@@ -58,22 +58,22 @@ USAGE
 =====
 
 Open a safe:
-	safe open notes
+    safe open notes
 
 Open all known safes:
-	safe open all
+    safe open all
 
 Close a safe:
-	safe close notes
+    safe close notes
 
 Close all safes:
-	safe close all
+    safe close all
 
 Show available safes:
-	safe list
+    safe list
 
 Status a safe:
-	safe status notes
+    safe status notes
 
 Show the status of all safes:
-	safe status
+    safe status
