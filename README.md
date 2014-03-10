@@ -1,5 +1,4 @@
-SUMMARY
-=======
+#### SUMMARY
 
 The goal of this program is to keep sensitive data locked and secure
 at any time when it is not directly being used by the user.
@@ -17,8 +16,7 @@ will download encrypted files instead of raw files.
 While this doesn't completely protects your data, it is an improvement 
 over raw data sitting for the taking..
 
-HOW IT WORKS
-============
+#### HOW IT WORKS
 
 Data is stored in layers which visually look like this:
 
@@ -43,8 +41,7 @@ Ideally, the secure data is opened only as needed and quickly closed
 afterwards.  This way, if a system intrusion takes place, the attacker
 will only gain access to encrypted data and not valuable information.
 
-PREPARATION BEFORE USING THIS SCRIPT:
-=====================================
+#### PREPARATION BEFORE USING THIS SCRIPT:
 
 Create an empty file; This example makes a 32M file.
 ```
@@ -84,8 +81,7 @@ MOUNT_POINT="/mnt/secure/notes";;
 
 This part will be replaced by an external config file in the future.
 
-USAGE
-=====
+#### USAGE
 
 Open a safe:
 ```
