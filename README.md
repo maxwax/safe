@@ -1,139 +1,175 @@
-#### SUMMARY
+# Safe
 
-The goal of this program is to keep sensitive data locked and secure
-at any time when it is not directly being used by the user.
+The 'Safe' script faciltates easy access to open a filesystem stored in a LUKS encrypted data file.
 
-The user uses 'safe' to unlock a LUKS encrypted data file and have
-an embedded filesystem mounted.  The data is then available to the user
-similar to a USB storage disk being mounted.  When the user is done 
-accessing the data it is unmounted and locked again.
+By storing confidential data within an encrypted filesystem in this manner the data is protected from users and programs that have access to your system.
 
-By keeping data secure when not directly in use, it limits the ability
-for intruders and other unauthorized users to gain access to it. If an
-intruder gains access to your system in the middle of the night, they
-will download encrypted files instead of raw files.
+Even if someone or something has accessed to the overall encrypted filesystem on your computer, the data within this encrypted file is inaccessible while locked.
 
-While this doesn't completely protects your data, it is an improvement 
-over raw data sitting for the taking..
+Users use 'safe' to open the encrypted filesystem, access data, then close it.  This ensures that the data is protected most of the time.
 
-#### HOW IT WORKS
+## Operation
+
+### Safe open
+
+```bash
+$ sudo safe open my-safe
+
+Enter passphrase for /home/maxwell/Documents/Safes/my-safe.luks:
+/dev/mapper/LUKS_my-safe on /mnt/secure/my-safe type ext4 (rw,relatime,seclabel)
+
+Your files are now available at /mnt/secure/my-safe
+REMEMBER TO CLOSE IT with: 'safe close my-save'
+```
+
+This command makes the contents of an encrypted safe file accessible to the user as a mounted filesystem.  cryptsetup is used to open access to the safe, then the filesystem within the safe is mounted at a location such as /mnt/secure/my-save.
+
+Users use any program, script or command line to access the data.
+
+### Safe close
+
+```bash
+$ sudo safe close my-safe
+
+Mount check after unmounting:
+Safe       Open User       Map Name        Mount point             Filename       
+----       ---- ----       --------        -----------             --------       
+my-safe    no   maxwell    LUKS_my-safe    /mnt/secure/my-safe     my-safe.luks     
+
+-rw-r--r--. 1 maxwell maxwell 1.0G Dec 24 22:51 /home/maxwell/Documents/Safes/my-safe.luks
+
+Cryptsetup status:
+/dev/mapper/LUKS_my-safe is inactive.
+```
+
+Immediately upon finishing with access to the data, users use this command to unmount the filesystem and close access to the safe's encrypted filesystem.  The data is now secure.
+
+### Safe status
+```bash
+$ sudo safe status my-safe
+
+Safe       Open User       Map Name        Mount point             Filename       
+----       ---- ----       --------        -----------             --------       
+my-safe    yes  maxwell    LUKS_my-safe    /mnt/secure/my-safe     my-safe.luks     
+
+-rw-r--r--. 1 maxwell maxwell 1.0G Dec 24 23:09 /home/maxwell/Documents/Safes/my-safe.luks
+
+Cryptsetup status:
+/dev/mapper/LUKS_my-safe is active and is in use.
+  type:    LUKS1
+  cipher:  aes-xts-plain64
+  keysize: 256 bits
+  key location: dm-crypt
+  device:  /dev/loop0
+  loop:    /home/maxwell/Documents/Safes/my-safe.luks
+  sector size:  512
+  offset:  4096 sectors
+  size:    2093056 sectors
+  mode:    read/write
+```
+
+This command shows the current status (open or closed) of a configured safe file.
+
+### Safe list
+
+```bash
+$ sudo safe list
+Safe       Open User       Map Name        Mount point             Filename       
+----       ---- ----       --------        -----------             --------       
+accts      no   maxwell    LUKS_accts      /mnt/secure/accts       accts.luks     
+receipts   no   maxwell    LUKS_receipts   /mnt/secure/receipts    receipts.luks     
+travel     no   maxwell    LUKS_travel     /mnt/secure/travel      travel.luks
+```
+
+This command lists safes configured in a configuration file, /root/.safe.conf
+
+# Techincal Details
+
+Safe is a wrapper around 'cryptsetup' which handles opening and closing access to encrypted data.
 
 Data is stored in layers which visually look like this:
 
-Layer 3: User data as files
+Layer | Description
+----- | -----------
+Layer 3| Private User Data
+Layer 2| Formatted ext4 filesystem
+Layer 1| LUKS encrypted data
+Layer 0| Normal Linux file
 
-Layer 2: ext4 filesystem
+## Config File $HOME/.safe.conf
 
-Layer 1: LUKS encrypted data
+A configuration file, $HOME/.safe.conf, defines a directory where safes are stored as well as declarations for each safe file:
 
-Layer 0: Simple Linux file
+**safe_name** - A unique name for each Safe
 
-Using the 'open' command, this script points to the Linux file and
-unlocks its LUKS-secured data, revealing an ext4 filesystem.  The ext4
-filesystem is then mounted and the user can access files with normal
-tools.
+**safe_user** - The user name of the owner of this data
 
-Using the 'close' command, this script unmounts the mounted filesystem
-then closes the mapped LUKS data, leaving the file encrypted and
-protected from others.
+**safe_mapper** - A unique name device mapper will provide in /dev/mapper for the accessible unencrypted data.  This will act like a normal block device for formatting and mounting.
 
-Ideally, the secure data is opened only as needed and quickly closed
-afterwards.  This way, if a system intrusion takes place, the attacker
-will only gain access to encrypted data and not valuable information.
+**safe_mount** - Where the formatted filesystem should be mounted
+
+**safe_filename** - The filename of the safe in the safe directory
+```
+#
+# Personal config file for 'safe' script to lock/unlock encrypted filesystems
+#
+
+safe_directory /home/maxwell/Documents/Safes
+
+# Syntax:
+#safe_file <safe_name> <safe_user> <safe_mapper> <save_mount> <safe_filename>
+
+# Accounting Files
+safe_file accts maxwell LUKS_accts /mnt/secure/accts accts.luks
+
+# Legal information
+safe_file receipts maxwell LUKS_receipts /mnt/secure/receipts receipts.luks
+
+# Personal Information
+safe_file travel maxwell LUKS_travel /mnt/secure/travel travel.luks
+```
+
+## Requirements
+
+Users must use 'sudo' to call this script because cryptsetup will use the Linux device mapper facility to make the encrypted data appear as a block device.
+
+
+
 
 #### PREPARATION BEFORE USING THIS SCRIPT:
 
-Create an empty file; This example makes a 32M file.
+1. Create an empty file; This example makes a 32M file.
 ```
-dd if=/dev/zero of=my-luks-locker.luks bs=1M count=32
-```
-
-Encrypt the data with luks
-```
-cryptsetup luksFormat my-luks-locker.luks
+dd if=/dev/zero of=my-safe.luks bs=1M count=32
 ```
 
-Open the encrypted data, mapping it as a block device using device mapper
+1. Encrypt the data with luks
 ```
-cryptsetup luksOpen my-luks-locker.luks my-open-luks
-```
-
-Format the mapped block device
-```
-mkfs.ext4 -v -m 0 -j -L my-luks-locker /dev/mapper/my-open-luks
+cryptsetup luksFormat my-safe.luks
 ```
 
-Mount the newly created filesystem
+1. Open the encrypted data, mapping it as a block device using device mapper
+```
+cryptsetup luksOpen my-safe.luks my-safe
+```
+
+1. Format the LUKS data space.  This ensures that the data within the filesystem is randomized.
+```
+pv -tpreb /dev/zero | dd of=/dev/mapper/my-safe bs=1M
+```
+1. Format the mapped block device. You can use XFS or any other valid filesystem.
+```
+mkfs.ext4 -v -m 0 -j -L my-safe /dev/mapper/my-safe
+```
+1. Mount the newly created filesystem
 ```
 mkdir /mnt/my-open-luks
 mount /dev/mapper/my-open-luks /mnt/my-open-luks
 ```
 
-Modify this script to add a case statement for each luks encrypted
-file:
+1. Add a declaration to the configuration file for this new safe file:
 
 ```
-USER="maxwell"
-SOURCE_FILE="/home/maxwell/Documents/Projects/Notes/notes.luks"
-UNLOCKED_MAPPING="notes-luks"
-MOUNT_POINT="/mnt/secure/notes";;
-```
-
-This part will be replaced by an external config file in the future.
-
-#### USAGE
-
-Open a safe:
-```
-linux # safe open notes
-
-Enter passphrase for /home/maxwell/Documents/Safes/notes.luks: 
-Your files are now available at /mnt/secure/notes
-Issue safe-close notes to close it
-
-```
-
-Open all known safes:
-```
-# safe open all
-```
-
-Close a safe:
-```
-# safe close notes
-
-The safe notes is now closed and locked.
-```
-
-Close all safes:
-```
-# safe close all
-```
-
-Show available safes:
-```
-# safe list
-```
-
-Status a safe:
-```
-# safe status notes
-
-== Safe 'notes' ==
-/dev/mapper/notes-luks is active and is in use.
-  type:    LUKS1
-  cipher:  aes-xts-plain64
-  keysize: 4096 bits
-  device:  /dev/loop0
-  loop:    /home/maxwell/Documents/Safes/notes.luks
-  offset:  4096 sectors
-  size:    61440 sectors
-  mode:    read/write
-/dev/mapper/notes-luks on /mnt/secure/notes type ext4 (rw,relatime,seclabel,data=ordered)
-
-```
-
-Show the status of all safes:
-```
-# safe status all
+# Bank Statements
+safe_file bank maxwell LUKS_bank /mnt/secure/bank bank.luks
 ```
