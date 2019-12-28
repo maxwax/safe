@@ -180,11 +180,11 @@ function open_safe {
 			if [[ ! -d $SAFE_MOUNT ]]
 			then
 				echo "Info: Mount point $SAFE_MOUNT does not exist.  Creating it now."
-				mkdir -p $MOUNT_POINT
+				mkdir -p $SAFE_MOUNT
 				echo "Setting owner of $SAFE_MOUNT as $SAFE_USER"
-				chown $SAFE_USER $MOUNT_POINT
+				chown $SAFE_USER $SAFE_MOUNT
 				echo "Setting security permissions to exclude others on $SAFE_MOUNT"
-				chmod og-rwx $MOUNT_POINT
+				chmod og-rwx $SAFE_MOUNT
 			fi
 
 			mount /dev/mapper/$SAFE_MAPPER $SAFE_MOUNT
