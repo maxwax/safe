@@ -1,5 +1,11 @@
 # CHANGLOG for 'safe' script
 
+## 2.0.3
+
+* Identify when not running as root, report need for root to user and exit gracefuly
+* After a encrypted filesystem is mounted, show its stats for used/available space via the df command
+* Slight documentation updates
+
 ## 2.0.2
 
 * Bug fix: When selecting a single line in the config file that uniquely defines the config for a safe, you must scan the config file for the combintation of the "safe_file" keyword at the start of the line plus the unique name of the safe file itself.  Previously it would scan for lines that start with "safe_file" then filter them to only process the line for the unique safe name.  In cases where the safe name, such as 'maxwell', might also appear on multiple other safe_file lines, the program would fail to identify a single unique safe configuration and fail to work.

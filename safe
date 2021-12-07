@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Our version, update as changes are made.
-VERSION="2.0.2"
-VERSION="2021.1206.01"
+VERSION="2.0.3"
+VERSION="2021.1206.02"
 
 CONFIG_FILE=/home/${USERNAME}/.safe.conf
 
@@ -15,6 +15,22 @@ SAFE_MAPPER=""
 SAFE_MOUNT=""
 SAFE_FILENAME=""
 SAFE_OPEN="no"
+
+function verify_running_as_root {
+	# Bash variable UID returns the user id # of the user
+	# Running as root, or running this script using sudo should return user 0
+	SUDO_USER="null"
+	if [ $UID != 0 ]
+	then
+		echo "You must be root or use 'sudo' to enable safe to work."
+		exit 1
+	else
+		# When this script is called using 'sudo' OR 'su' this records
+		# the name of the non-root user so we can set security to this
+		# user on our output files. Same as 'who am i'
+		SUDO_USER=$(who -m | awk '{ print $1 }')
+	fi
+}
 
 function usage {
 	echo
@@ -203,6 +219,9 @@ function open_safe {
 			else
 				mount | grep $SAFE_MOUNT
 				echo
+				df -h | grep '^Filesystem'
+				df -h | grep $SAFE_MOUNT
+				echo
 				echo "Your files are now available at $SAFE_MOUNT"
 				echo "REMEMBER TO CLOSE IT with: 'safe close $1'"
 			fi
@@ -281,6 +300,10 @@ function status_safe {
 #
 # Main Operation
 #
+
+# Safe can't execute cryptsetup calls to open or close safe files
+# unless it has root privileges, so check and exit if not
+verify_running_as_root
 
 validate_config_file
 

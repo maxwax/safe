@@ -1,6 +1,6 @@
 # Safe
 
-The 'Safe' script faciltates easy access to open a filesystem stored in a LUKS encrypted data file.
+The 'Safe' script facilitates easy access to open a filesystem stored in a LUKS encrypted data file.
 
 By storing confidential data within an encrypted filesystem in this manner the data is protected from users and programs that have access to your system.
 
@@ -133,14 +133,32 @@ safe_file travel maxwell LUKS_travel /mnt/secure/travel travel.luks
 
 Users must use 'sudo' to call this script because cryptsetup will use the Linux device mapper facility to make the encrypted data appear as a block device.
 
+### Sparse or normal files
 
+When preparing a data file to store an encrypted and embedded Linux filesystem, you can choose to use 'sparse' files or 'normal' files.
 
+A 'sparse' file pre-allocates a set amount of space without actually consuming the space on disk. This saves actual disk blocks, limits writes to create the initial file to prep time is reduced and may have other benefits.
+
+A 'normal' file allocates a set amount of space and consumes that amount of space immediately.  The main advantage of this is that a file requiring 4G of space will have it allocated immediately and never run into problems attempting to expand later if the host filesystem is full.
+
+When using files for safes, I often use a large sparse file such as 1G or 4G in size, then only store some number of megabytes initially.
+
+If you want maximum security, you will write all zeros to the file using the command suggested below.  This will allocate 100% of the space in a sparse file, so it becomes equivalent to a normal file at this point.
 
 #### PREPARATION BEFORE USING THIS SCRIPT:
 
-1. Create an empty file; This example makes a 32M file.
+1. Create an empty file; This example makes a 1G file.
 ```
-dd if=/dev/zero of=my-safe.luks bs=1M count=32
+# Create a 1G sparse file
+truncate -s 1G my-safe-file.luks
+
+# OR, the old fashioned way:
+
+# Sparse
+dd if=/dev/zero of=my-sparse-safe.luks bs=1G count=0 seek=1
+
+# Normal
+dd if=/dev/zero of=my-normal-safe.luks bs=1G count=1
 ```
 
 1. Encrypt the data with luks
