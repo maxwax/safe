@@ -1,5 +1,17 @@
 # CHANGLOG for 'safe' script
 
+## 2.0.2
+
+* Bug fix: When selecting a single line in the config file that uniquely defines the config for a safe, you must scan the config file for the combintation of the "safe_file" keyword at the start of the line plus the unique name of the safe file itself.  Previously it would scan for lines that start with "safe_file" then filter them to only process the line for the unique safe name.  In cases where the safe name, such as 'maxwell', might also appear on multiple other safe_file lines, the program would fail to identify a single unique safe configuration and fail to work.
+
+Ex:
+safe_file personal maxwell LUKS_personal /mnt/secure/personal personal.luks
+safe_file maxwell maxwell LUKS_maxwell /mnt/secure/maxwell maxwell.luks
+
+Opening the safe 'personal' would work because that keyword is only found on one line, while a safe 'maxwell' would fail because it is not unique.
+
+The fix searches for 'safe_file maxwell' and now both lines are unique for selection purposes.
+
 ## 2.0.1 Bug fix: Create mount points
 
 * When a mount point in the config file doesn't exist, create it. Used the wrong variable name previously and didn't test this rare condition, so it wouldn't actually create them. Just tested now and appears to work.

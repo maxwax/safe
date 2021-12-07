@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Our version, update as changes are made.
-VERSION="2.0.0"
-VERSION="2019.1224.01"
+VERSION="2.0.2"
+VERSION="2021.1206.01"
 
 CONFIG_FILE=/home/${USERNAME}/.safe.conf
 
@@ -28,6 +28,8 @@ function usage {
 	echo "'list'   - list available safes"
 	echo
 	echo "Example: safe open notes"
+	echo
+	echo "Warning: Safe names must not contain spaces."
 	echo
 }
 
@@ -80,13 +82,16 @@ function get_safe_info {
 		SAFE_FILENAME=""
 		SAFE_OPEN="no"
 
-		FOUND_COUNT=$(egrep '^safe_file' $CONFIG_FILE | grep $1 | wc -l)
+		#FOUND_COUNT=$(egrep '^safe_file $1' $CONFIG_FILE | grep $1 | wc -l)
+		# Grep for line that defines a safe plus the safe name
+		FOUND_COUNT=$(egrep "^safe_file $1" $CONFIG_FILE | wc -l)
 
 		if [[ $FOUND_COUNT == 1 ]]
 		then
 			VALID_SAFE=true
 
-			SAFE_INFO=$(egrep '^safe_file' $CONFIG_FILE | grep $1)
+			# Grep for line that defines a safe plus the safe name
+			SAFE_INFO=$(egrep "^safe_file $1" $CONFIG_FILE)
 
 			SAFE_NAME=$(echo $SAFE_INFO | awk '{print $2}')
 			SAFE_USER=$(echo $SAFE_INFO | awk '{print $3}')
@@ -114,6 +119,8 @@ function report_detail {
 }
 
 function list_safes {
+
+	# From all config file lines that define safes, list the safes' names
 
 	FILE_COUNT=$(egrep '^safe_file' $CONFIG_FILE | awk {'print $2'} | wc -l)
 	if [[ $FILE_COUNT == 0 ]]
