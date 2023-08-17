@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Our version, update as changes are made.
-VERSION="2.0.3"
-VERSION="2021.1206.02"
+VERSION="2.0.4"
+VERSION="2023-0816"
 
 CONFIG_FILE=/home/${USERNAME}/.safe.conf
 

@@ -1,5 +1,9 @@
 # CHANGLOG for 'safe' script
 
+## 2.0.4
+
+* Replace usage of 'egrep' with 'grep -E'
+
 ## 2.0.3
 
 * Identify when not running as root, report need for root to user and exit gracefuly
